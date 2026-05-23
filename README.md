@@ -1,19 +1,23 @@
-# dashboard-finance# WealthFlow 💰
+# Fortuna
 
-A self-hosted personal finance dashboard built with vanilla HTML/JS, deployable via Docker.
+> Self-hosted personal finance dashboard — static web application served with Docker & nginx
 
-Track your bank accounts, ETF portfolio, and real estate assets — all in one place, with no server, no account, no internet required.
+
+
+Track your bank accounts, ETF portfolio, PEE (Plan Épargne Entreprise), and real estate assets month by month. No server, no account, no internet required.
 
 ---
 
 ## Features
 
-- **Bank accounts** — track monthly balances and evolution
-- **ETF & stocks** — parts, price per share, YTD performance, monthly variation
-- **Real estate** — estimated value, remaining loan, equity & LTV
-- **Net & gross patrimoine** — automatic calculation every month
-- **Charts** — monthly evolution, allocation breakdown, ETF YTD performance
-- **Export / Import JSON** — full backup and restore
+- **Comptes bancaires** — track monthly balances and evolution
+- **ETFs & actions** — parts × price, monthly variation, YTD performance (depuis 01/01), total +/- value
+- **PEE** — Plan Épargne Entreprise, track total value per fund per month
+- **Immobilier** — estimated value, remaining loan (crédit), equity & LTV
+- **Patrimoine Net & Brut** — automatic calculation every month, including ETF gains
+- **Dashboard** — evolution chart (Comptes / ETFs / PEE / Immo), allocation donut, YTD ETF performance chart
+- **Historique** — full monthly entry table
+- **Export / Import JSON** — backup and restore from Paramètres page
 - **100% local** — data stored in browser localStorage, no cloud, no tracking
 
 ---
@@ -25,8 +29,8 @@ Track your bank accounts, ETF portfolio, and real estate assets — all in one p
 No installation needed.
 
 ```bash
-open finance-dashboard.html   # macOS
-xdg-open finance-dashboard.html  # Linux
+xdg-open finance-dashboard.html   # Linux
+open finance-dashboard.html       # macOS
 ```
 
 Or just double-click the file in your file manager.
@@ -34,8 +38,8 @@ Or just double-click the file in your file manager.
 ### Option 2 — Docker
 
 ```bash
-docker build -t wealthflow .
-docker run -d -p 8080:80 --name wealthflow wealthflow
+docker build -t fortuna .
+docker run -d -p 8080:80 --name fortuna fortuna
 ```
 
 Then open [http://localhost:8080](http://localhost:8080) in your browser.
@@ -52,28 +56,42 @@ EXPOSE 80
 
 ---
 
+## Project Structure
+
+```
+fortuna/
+├── finance-dashboard.html   # The entire app (HTML + CSS + JS)
+├── Dockerfile
+└── README.md
+```
+
+---
+
 ## Data & Backup
 
-Data is stored in your browser's `localStorage` (key: `wealthflow_v3`).
+Data is stored in your browser's `localStorage` (key: `fortuna_v1`).
 
-To avoid data loss:
+**To back up:**
 1. Go to **Paramètres** → **Exporter le backup JSON**
-2. Save the `.json` file somewhere safe
+2. Save the `.json` file somewhere safe (USB, cloud drive, etc.)
 
-To restore or transfer to another machine:
+**To restore or transfer to another machine:**
 1. Open `finance-dashboard.html` in Chrome
 2. Go to **Paramètres** → **Importer un backup JSON**
-3. Select your `.json` file
+3. Select your `.json` file — all data is restored instantly
+
+> Backup files are automatically named `fortuna-backup-YYYY-MM-DD.json`
 
 ---
 
 ## Tech Stack
 
-- Vanilla HTML / CSS / JavaScript
-- [Chart.js](https://www.chartjs.org/) — charts
-- Google Fonts (Inter)
-- nginx (Docker)
-- No frameworks, no dependencies, no build step
+| Tool | Role |
+|---|---|
+| Vanilla HTML / CSS / JavaScript | App — no framework, no build step |
+| [Chart.js 4](https://www.chartjs.org/) | Charts (evolution, donut, YTD, mini sparklines) |
+| Google Fonts (Inter) | Typography |
+| nginx:alpine | Static file serving (Docker) |
 
 ---
 
