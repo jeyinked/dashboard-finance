@@ -69,18 +69,36 @@ fortuna/
 
 ## Data & Backup
 
-Data is stored in your browser's `localStorage` (key: `fortuna_v1`).
+Data is stored in your **browser's localStorage** (key: `fortuna_v1`), not in the Docker container. This means:
+
+- Your data stays in your browser even if the container stops or is deleted
+- Two different users on two different machines each have their own independent data
+- Clearing your browser data will erase it — always keep a JSON backup
 
 **To back up:**
 1. Go to **Paramètres** → **Exporter le backup JSON**
 2. Save the `.json` file somewhere safe (USB, cloud drive, etc.)
 
 **To restore or transfer to another machine:**
-1. Open `finance-dashboard.html` in Chrome
+1. Open the app in your browser (direct file or Docker)
 2. Go to **Paramètres** → **Importer un backup JSON**
 3. Select your `.json` file — all data is restored instantly
 
 > Backup files are automatically named `fortuna-backup-YYYY-MM-DD.json`
+
+### Using with Docker — first time setup
+
+```bash
+# 1. Pull and run
+docker build -t fortuna .
+docker run -d -p 8080:80 --name fortuna fortuna
+
+# 2. Open the app, enter your data
+# 3. Go to Paramètres → Exporter le backup JSON → save the file
+
+# Next time you restart the container, your data is still in your browser.
+# If you clear your browser or switch machine → Importer un backup JSON
+```
 
 ---
 
