@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WealthFlow</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080810;--card:rgba(255,255,255,0.04);--card-border:rgba(255,255,255,0.08);
+  --text:#f1f5f9;--muted:#64748b;--violet:#7c3aed;--cyan:#06b6d4;
+  --green:#10b981;--red:#ef4444;--amber:#f59e0b;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;
+  background:radial-gradient(ellipse at 20% 20%,rgba(124,58,237,.15) 0%,transparent 50%),
+             radial-gradient(ellipse at 80% 80%,rgba(6,182,212,.10) 0%,transparent 50%);
+  pointer-events:none;z-index:0}
+#app{display:flex;min-height:100vh;position:relative;z-index:1}
+
+/* Sidebar */
+.sidebar{width:220px;background:rgba(15,15,26,.9);backdrop-filter:blur(20px);
+  border-right:1px solid var(--card-border);padding:24px 14px;
+  display:flex;flex-direction:column;gap:3px;position:fixed;height:100vh;top:0;left:0;z-index:10}
+.logo{font-size:19px;font-weight:800;background:linear-gradient(135deg,var(--violet),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:24px;display:flex;align-items:center;gap:9px}
+.logo svg{width:28px;height:28px;flex-shrink:0}
+.nav-item{display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:10px;cursor:pointer;
+  transition:all .2s;font-size:13px;font-weight:500;color:var(--muted);border:1px solid transparent}
+.nav-item:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.nav-item.active{background:rgba(124,58,237,.15);border-color:rgba(124,58,237,.3);color:#a78bfa}
+.nav-item svg{width:16px;height:16px;flex-shrink:0}
+.nav-sep{flex:1}
+
+/* Main */
+.main{margin-left:220px;flex:1;padding:32px 36px;min-height:100vh}
+.page{display:none}.page.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.page.active>*{animation:fadeUp .2s ease both}
+
+/* Header */
+.ph{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}
+.ph h1{font-size:24px;font-weight:800}
+.ph p{font-size:13px;color:var(--muted);margin-top:3px}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--card-border);border-radius:16px;
+  padding:20px;backdrop-filter:blur(10px);transition:border-color .3s,transform .2s}
+.card:hover{border-color:rgba(124,58,237,.2);transform:translateY(-1px)}
+
+/* Grids */
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+
+/* Stats */
+.slbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:5px}
+.sval{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.badge{display:inline-flex;align-items:center;font-size:11px;font-weight:600;
+  margin-top:6px;padding:3px 8px;border-radius:100px}
+.badge.up{background:rgba(16,185,129,.15);color:var(--green)}
+.badge.dn{background:rgba(239,68,68,.15);color:var(--red)}
+.badge.nt{background:rgba(100,116,139,.12);color:var(--muted)}
+
+.stitle{font-size:15px;font-weight:700;margin-bottom:12px}
+
+/* Toggle */
+.tg-group{display:flex;gap:3px;background:rgba(255,255,255,.05);border-radius:8px;padding:3px}
+.tgl{padding:5px 12px;border-radius:6px;border:none;background:transparent;color:var(--muted);
+  font-size:11px;font-weight:500;cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif}
+.tgl.active{background:rgba(124,58,237,.3);color:#a78bfa}
+
+/* Allocation bars */
+.arow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.arow:last-child{border:none}
+.aname{width:120px;font-size:12px;font-weight:500;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.abar-w{flex:1;height:5px;background:rgba(255,255,255,.08);border-radius:100px;overflow:hidden}
+.abar{height:100%;border-radius:100px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.apct{font-size:11px;font-weight:600;color:var(--muted);width:36px;text-align:right}
+.aval{font-size:12px;font-weight:600;width:90px;text-align:right}
+
+/* Table */
+.tbl-w{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:9px 12px;font-size:10px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--muted);border-bottom:1px solid var(--card-border)}
+td{padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--text)}
+tr:hover td{background:rgba(255,255,255,.02)}
+
+/* Dot */
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex-shrink:0}
+
+/* Mini stat */
+.ms{background:rgba(255,255,255,.04);border-radius:9px;padding:9px}
+.ms-l{font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px}
+.ms-v{font-size:14px;font-weight:700}
+
+/* Buttons */
+.btn{padding:9px 18px;border-radius:9px;border:none;font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:6px}
+.btn-p{background:linear-gradient(135deg,var(--violet),#9333ea);color:#fff;box-shadow:0 4px 16px rgba(124,58,237,.4)}
+.btn-p:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,58,237,.6)}
+.btn-s{background:rgba(255,255,255,.08);color:var(--text)}
+.btn-s:hover{background:rgba(255,255,255,.12)}
+.btn-d{background:rgba(239,68,68,.1);color:var(--red);padding:5px 8px;font-size:11px}
+.btn-d:hover{background:rgba(239,68,68,.2)}
+.btn-add{background:rgba(255,255,255,.06);color:var(--muted);border:1px dashed rgba(255,255,255,.15);
+  width:100%;justify-content:center;padding:10px;border-radius:10px;font-size:12px}
+.btn-add:hover{background:rgba(124,58,237,.1);color:#a78bfa;border-color:rgba(124,58,237,.3)}
+
+/* Config asset row */
+.cfg-row{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.03);
+  border-radius:10px;border:1px solid rgba(255,255,255,.06);padding:10px;margin-bottom:8px}
+.cfg-row input[type=color]{width:32px;height:32px;padding:2px;border-radius:7px;
+  border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);cursor:pointer;flex-shrink:0}
+.cfg-row input[type=text]{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);
+  border-radius:8px;padding:7px 10px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;flex:1}
+.cfg-row input[type=text]:focus{outline:none;border-color:var(--violet)}
+.cfg-row .tick{width:80px}
+
+/* Entry form */
+.entry-card{background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.2);
+  border-radius:16px;padding:20px;margin-top:16px}
+.entry-grid{display:grid;gap:10px;margin:12px 0}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg label{font-size:11px;font-weight:500;color:var(--muted)}
+.fg input{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;
+  padding:8px 11px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;width:100%}
+.fg input:focus{outline:none;border-color:var(--violet)}
+.entry-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+
+/* Month input */
+input[type=month]{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  border-radius:8px;padding:8px 11px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif}
+input[type=month]:focus{outline:none;border-color:var(--violet)}
+input[type=month]::-webkit-calendar-picker-indicator{filter:invert(1) opacity(.4)}
+
+/* Empty */
+.empty{text-align:center;padding:44px 20px;color:var(--muted)}
+.empty svg{width:40px;height:40px;margin:0 auto 12px;opacity:.3}
+.empty h3{font-size:16px;font-weight:600;color:var(--text);margin-bottom:5px}
+.empty p{font-size:12px}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:#1a1a2e;border:1px solid rgba(255,255,255,.1);
+  border-radius:10px;padding:10px 16px;font-size:12px;font-weight:500;z-index:300;
+  transform:translateY(10px);opacity:0;transition:all .3s;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{border-color:rgba(16,185,129,.4);color:#6ee7b7}
+.toast.err{border-color:rgba(239,68,68,.4);color:#fca5a5}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px}
+
+@media(max-width:1300px){.g5{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:960px){.g3{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){
+  .sidebar{width:58px;padding:18px 8px}
+  .logo span,.nav-item span{display:none}
+  .nav-item{justify-content:center}
+  .main{margin-left:58px;padding:18px}
+  .g2,.g3{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<nav class="sidebar">
+  <div class="logo">
+    <svg viewBox="0 0 28 28" fill="none">
+      <rect width="28" height="28" rx="8" fill="url(#lg)"/>
+      <path d="M6 20L12 14L16 18L22 10" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <defs><linearGradient id="lg" x1="0" y1="0" x2="28" y2="28">
+        <stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#06b6d4"/>
+      </linearGradient></defs>
+    </svg>
+    <span>WealthFlow</span>
+  </div>
+  <div class="nav-item active" onclick="nav('dashboard')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span>Dashboard</span>
+  </div>
+  <div class="nav-item" onclick="nav('comptes')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+    <span>Comptes</span>
+  </div>
+  <div class="nav-item" onclick="nav('etfs')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+    <span>ETFs</span>
+  </div>
+  <div class="nav-item" onclick="nav('immo')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Immobilier</span>
+  </div>
+  <div class="nav-item" onclick="nav('historique')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    <span>Historique</span>
+  </div>
+  <div class="nav-sep"></div>
+  <div class="nav-item" onclick="nav('parametres')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <span>Paramètres</span>
+  </div>
+</nav>
+
+<main class="main">
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <div class="ph"><div><h1>Dashboard</h1><p>Vue d'ensemble de votre patrimoine</p></div></div>
+
+  <div class="g2" style="margin-bottom:16px">
+    <div class="card" style="border-color:rgba(124,58,237,.3)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div class="slbl">Patrimoine Net</div>
+          <div class="sval" id="d-total" style="font-size:30px">—</div>
+          <div class="badge nt" id="d-total-b">—</div>
+        </div>
+        <div style="text-align:right">
+          <div class="slbl">Patrimoine Brut</div>
+          <div style="font-size:18px;font-weight:700;color:var(--muted)" id="d-brut">—</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">Dettes : <span id="d-dettes" style="color:var(--red)">—</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+      <div class="card"><div class="slbl">Comptes</div><div class="sval" id="d-comp">—</div><div class="badge nt" id="d-comp-b">—</div></div>
+      <div class="card"><div class="slbl">ETFs</div><div class="sval" id="d-etf">—</div><div class="badge nt" id="d-etf-b">—</div></div>
+      <div class="card"><div class="slbl">Équité Immo</div><div class="sval" id="d-immo">—</div><div class="badge nt" id="d-immo-b">—</div></div>
+      <div class="card"><div class="slbl">+/- Value ETFs</div><div class="sval" id="d-etf-gain">—</div><div style="font-size:11px;color:var(--muted);margin-top:2px" id="d-etf-gain-pct">—</div></div>
+    </div>
+  </div>
+
+  <div class="g2" style="margin-bottom:16px">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="stitle" style="margin:0">Évolution</div>
+        <div class="tg-group">
+          <button class="tgl active" onclick="setMode('all')">Tout</button>
+          <button class="tgl" onclick="setMode('comptes')">Comptes</button>
+          <button class="tgl" onclick="setMode('etfs')">ETFs</button>
+          <button class="tgl" onclick="setMode('immo')">Immo</button>
+        </div>
+      </div>
+      <div style="height:230px"><canvas id="ch-evo"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="stitle">Répartition</div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="width:160px;height:160px;flex-shrink:0"><canvas id="ch-donut"></canvas></div>
+        <div style="flex:1" id="donut-legend"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="d-ytd-card" style="display:none;margin-bottom:16px">
+    <div class="stitle">Performance YTD des ETFs — depuis le 01/01</div>
+    <div style="height:230px"><canvas id="ch-ytd"></canvas></div>
+  </div>
+
+  <div class="card" id="d-alloc-card" style="display:none">
+    <div class="stitle">Détail de l'allocation</div>
+    <div id="d-alloc"></div>
+  </div>
+
+  <div class="empty" id="d-empty">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+    <h3>Aucune donnée</h3>
+    <p>Allez sur les pages <strong>Comptes</strong>, <strong>ETFs</strong> ou <strong>Immobilier</strong> pour configurer vos actifs et saisir vos premières données</p>
+  </div>
+</div>
+
+<!-- COMPTES -->
+<div class="page" id="page-comptes">
+  <div class="ph">
+    <div><h1>Comptes Bancaires</h1><p>Soldes et évolution de vos comptes</p></div>
+    <button class="btn btn-s" onclick="addAsset('c')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Ajouter un compte
+    </button>
+  </div>
+  <div id="comp-cfg"></div>
+  <div class="g2" id="comp-cards" style="margin-top:16px"></div>
+  <div id="comp-entry"></div>
+</div>
+
+<!-- ETFS -->
+<div class="page" id="page-etfs">
+  <div class="ph">
+    <div><h1>ETFs &amp; Actions</h1><p>Performance de votre portefeuille</p></div>
+    <button class="btn btn-s" onclick="addAsset('e')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Ajouter un ETF / action
+    </button>
+  </div>
+  <div id="etf-cfg"></div>
+  <div class="g3" id="etf-cards" style="margin-top:16px"></div>
+  <div id="etf-entry"></div>
+</div>
+
+<!-- IMMOBILIER -->
+<div class="page" id="page-immo">
+  <div class="ph">
+    <div><h1>Immobilier</h1><p>Valeur, crédit et équité de vos biens</p></div>
+    <button class="btn btn-s" onclick="addAsset('b')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Ajouter un bien
+    </button>
+  </div>
+  <div id="immo-cfg"></div>
+  <div class="g3" id="immo-cards" style="margin-top:16px"></div>
+  <div id="immo-entry"></div>
+</div>
+
+<!-- HISTORIQUE -->
+<div class="page" id="page-historique">
+  <div class="ph">
+    <div><h1>Historique</h1><p>Toutes vos entrées mensuelles</p></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-p" onclick="exportData()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exporter
+      </button>
+      <button class="btn btn-s" onclick="document.getElementById('imp-input').click()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Importer
+      </button>
+      <input type="file" id="imp-input" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
+  </div>
+  <div class="card">
+    <div class="tbl-w"><table><thead id="hist-head"></thead><tbody id="hist-body"></tbody></table></div>
+    <div class="empty" id="hist-empty" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <h3>Aucune entrée</h3><p>Saisissez vos premières données sur les pages Comptes, ETFs ou Immobilier</p>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="slbl" style="margin-bottom:10px">Zone de danger</div>
+    <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Supprimer toutes les données. Action irréversible.</p>
+    <button class="btn btn-d" onclick="resetAll()">Réinitialiser toutes les données</button>
+  </div>
+</div>
+
+<!-- PARAMÈTRES -->
+<div class="page" id="page-parametres">
+  <div class="ph"><div><h1>Paramètres</h1><p>Sauvegarde et restauration de vos données</p></div></div>
+
+  <div class="g2" style="align-items:start">
+    <div class="card">
+      <div class="stitle">Exporter les données</div>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:16px;line-height:1.6">Télécharge un fichier <code style="background:rgba(255,255,255,.07);padding:2px 6px;border-radius:4px">.json</code> avec toutes tes données. À faire régulièrement pour ne pas perdre ton historique, et pour transférer sur un autre PC.</p>
+      <button class="btn btn-p" style="width:100%" onclick="exportData()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exporter le backup JSON
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="stitle">Importer des données</div>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:16px;line-height:1.6">Restaure un backup exporté précédemment. <strong style="color:var(--red)">Attention</strong> : cela remplace toutes les données actuelles.</p>
+      <button class="btn btn-s" style="width:100%" onclick="document.getElementById('imp-input2').click()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Importer un backup JSON
+      </button>
+      <input type="file" id="imp-input2" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px;border-color:rgba(239,68,68,.25)">
+    <div class="slbl" style="margin-bottom:8px;color:var(--red)">Zone de danger</div>
+    <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Supprime définitivement toutes les données. Action irréversible — exporte d'abord un backup.</p>
+    <button class="btn btn-d" onclick="resetAll()">Réinitialiser toutes les données</button>
+  </div>
+</div>
+
+</main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Data ─────────────────────────────────────────────────────────────────────
+const KEY = 'wealthflow_v3';
+const COLORS = ['#7c3aed','#06b6d4','#10b981','#f59e0b','#a78bfa','#f43f5e','#fb923c','#facc15','#34d399','#60a5fa'];
+
+function def() {
+  return { cfg:{ comptes:[], etfs:[], biens:[] }, entrees:[] };
+}
+
+const load = () => {
+  try {
+    const cur = localStorage.getItem(KEY);
+    if (cur) return JSON.parse(cur);
+    // migrate from older keys
+    for (const old of ['wealthflow_v2','wealthflow_v1','wealthflow']) {
+      const raw = localStorage.getItem(old);
+      if (!raw) continue;
+      const d = JSON.parse(raw);
+      if (!d.cfg) continue;
+      if (!d.cfg.biens) d.cfg.biens = [];
+      localStorage.setItem(KEY, JSON.stringify(d));
+      localStorage.removeItem(old);
+      return d;
+    }
+    return def();
+  } catch { return def(); }
+};
+const save = d => localStorage.setItem(KEY, JSON.stringify(d));
+
+// ── Formatters ────────────────────────────────────────────────────────────────
+const EUR = n => n==null||isNaN(n)?'—':new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',minimumFractionDigits:2}).format(n);
+const pct = (a,b) => a&&a!==0?((b-a)/a*100):null;
+const fmtP = n => n==null?'—':(n>=0?'+':'')+n.toFixed(2)+'%';
+const fmtM = m => { if(!m)return'—'; const[y,mo]=m.split('-'); return ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'][+mo-1]+' '+y; };
+const nowM = () => { const n=new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`; };
+
+// ── Totaux ────────────────────────────────────────────────────────────────────
+function totalC(e,cfg){ return cfg.comptes.reduce((s,c)=>s+parseFloat(e[c.id]||0),0); }
+function totalE(e,cfg){ return cfg.etfs.reduce((s,et)=>{ const d=e[et.id]||{}; return s+parseFloat(d.parts||0)*parseFloat(d.prix||0); },0); }
+function totalI(e,cfg){ return (cfg.biens||[]).reduce((s,b)=>{ const d=e[b.id]||{}; return s+Math.max(0,parseFloat(d.valeur||0)-parseFloat(d.credit||0)); },0); }
+function totalNet(e,cfg){ return totalC(e,cfg)+totalE(e,cfg)+totalI(e,cfg)+(e._etf_gain||0); }
+function totalBrut(e,cfg){ return totalC(e,cfg)+totalE(e,cfg)+(cfg.biens||[]).reduce((s,b)=>s+parseFloat((e[b.id]||{}).valeur||0),0)+(e._etf_gain||0); }
+function totalDettes(e,cfg){ return (cfg.biens||[]).reduce((s,b)=>s+parseFloat((e[b.id]||{}).credit||0),0); }
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+let curPage = 'dashboard';
+const pages = ['dashboard','comptes','etfs','immo','historique','parametres'];
+
+function nav(p) {
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach((el,i)=>el.classList.toggle('active',pages[i]===p));
+  document.getElementById('page-'+p).classList.add('active');
+  curPage = p;
+  render(p);
+}
+
+function render(p) {
+  const d = load();
+  if (p==='dashboard') renderDash(d);
+  else if (p==='comptes') renderComptes(d);
+  else if (p==='etfs') renderEtfs(d);
+  else if (p==='immo') renderImmo(d);
+  else if (p==='historique') renderHist(d);
+}
+
+// ── Charts ────────────────────────────────────────────────────────────────────
+const charts = {};
+function kill(id){ if(charts[id]){try{charts[id].destroy();}catch{}delete charts[id];} }
+
+function mkLine(id, labels, datasets) {
+  kill(id);
+  const ctx = document.getElementById(id); if(!ctx)return;
+  charts[id] = new Chart(ctx.getContext('2d'),{
+    type:'line', data:{labels,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{family:'Inter',size:10},boxWidth:9,boxHeight:9}},
+        tooltip:{backgroundColor:'#1e1e30',borderColor:'rgba(255,255,255,.1)',borderWidth:1,
+          titleColor:'#f1f5f9',bodyColor:'#94a3b8',callbacks:{label:c=>` ${c.dataset.label}: ${EUR(c.parsed.y)}`}}},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#64748b',font:{family:'Inter',size:10}}},
+        y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#64748b',font:{family:'Inter',size:10},callback:v=>EUR(v)}}
+      }}
+  });
+}
+
+function mkLinePct(id, labels, datasets) {
+  kill(id);
+  const ctx = document.getElementById(id); if(!ctx)return;
+  charts[id] = new Chart(ctx.getContext('2d'),{
+    type:'line', data:{labels,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{family:'Inter',size:10},boxWidth:9,boxHeight:9}},
+        tooltip:{backgroundColor:'#1e1e30',borderColor:'rgba(255,255,255,.1)',borderWidth:1,
+          titleColor:'#f1f5f9',bodyColor:'#94a3b8',
+          callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y>=0?'+':''}${c.parsed.y.toFixed(2)}%`}}},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#64748b',font:{family:'Inter',size:10}}},
+        y:{grid:{color:ctx=>ctx.tick.value===0?'rgba(255,255,255,.25)':'rgba(255,255,255,.04)'},
+          ticks:{color:'#64748b',font:{family:'Inter',size:10},callback:v=>(v>=0?'+':'')+v.toFixed(1)+'%'}}
+      }}
+  });
+}
+
+function mkMini(id, labels, vals, color, showX) {
+  kill(id);
+  const ctx = document.getElementById(id); if(!ctx)return;
+  charts[id] = new Chart(ctx.getContext('2d'),{
+    type:'line',
+    data:{labels,datasets:[{data:vals,borderColor:color,backgroundColor:color+'25',fill:true,tension:.4,pointRadius:3,pointHoverRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>EUR(c.parsed.y)}}},
+      scales:{
+        x:{display:!!showX,grid:{display:false},ticks:{color:'#64748b',font:{size:9}}},
+        y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#64748b',font:{size:9},callback:v=>EUR(v)}}
+      }}
+  });
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+let chartMode = 'all';
+function setMode(m){
+  chartMode=m;
+  document.querySelectorAll('.tgl').forEach((b,i)=>b.classList.toggle('active',['all','comptes','etfs','immo'][i]===m));
+  renderDash(load());
+}
+
+function setBadge(id,val,sfx){
+  const el=document.getElementById(id); if(!el)return;
+  if(val==null){el.textContent='—';el.className='badge nt';return;}
+  el.textContent=(val>=0?'+':'')+val.toFixed(2)+'% '+(sfx||'');
+  el.className='badge '+(val>=0?'up':'dn');
+}
+
+function renderDash(d) {
+  const sorted=[...d.entrees].sort((a,b)=>a.mois.localeCompare(b.mois));
+  const has=sorted.length>0;
+
+  document.getElementById('d-empty').style.display=has?'none':'block';
+  document.getElementById('d-alloc-card').style.display=has?'block':'none';
+
+  if(!has){
+    ['d-total','d-brut','d-dettes','d-comp','d-etf','d-immo'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
+    ['ch-evo','ch-donut','ch-ytd'].forEach(kill);
+    return;
+  }
+
+  const last=sorted[sorted.length-1], prev=sorted.length>1?sorted[sorted.length-2]:null;
+  const tN=totalNet(last,d.cfg), cL=totalC(last,d.cfg), eL=totalE(last,d.cfg), iL=totalI(last,d.cfg);
+  const bL=totalBrut(last,d.cfg), dL=totalDettes(last,d.cfg);
+
+  document.getElementById('d-total').textContent=EUR(tN);
+  document.getElementById('d-brut').textContent=EUR(bL);
+  document.getElementById('d-dettes').textContent=EUR(dL);
+  document.getElementById('d-comp').textContent=EUR(cL);
+  document.getElementById('d-etf').textContent=EUR(eL);
+  document.getElementById('d-immo').textContent=EUR(iL);
+
+  // +/- Value ETFs : valeur manuelle en priorité, sinon calcul auto
+  let etfGain=last._etf_gain!=null?last._etf_gain:null;
+  if(etfGain==null){
+    etfGain=d.cfg.etfs.reduce((sum,et)=>{
+      const dd=last[et.id]||{}, cur=parseFloat(dd.parts||0)*parseFloat(dd.prix||0);
+      const first=sorted.map(e=>{const d2=e[et.id]||{};return parseFloat(d2.parts||0)*parseFloat(d2.prix||0);}).find(v=>v>0)||0;
+      return sum+(cur-first);
+    },0);
+  }
+  const gainEl=document.getElementById('d-etf-gain'), gainPctEl=document.getElementById('d-etf-gain-pct');
+  if(gainEl){gainEl.textContent=EUR(etfGain);gainEl.style.color=etfGain>=0?'var(--green)':'var(--red)';}
+  if(gainPctEl){gainPctEl.textContent=last._etf_gain!=null?'saisi manuellement':'calculé auto';gainPctEl.style.color='var(--muted)';}
+
+  if(prev){
+    setBadge('d-total-b',pct(totalNet(prev,d.cfg),tN),'vs mois préc.');
+    setBadge('d-comp-b',pct(totalC(prev,d.cfg),cL),'vs mois préc.');
+    setBadge('d-etf-b',pct(totalE(prev,d.cfg),eL),'vs mois préc.');
+    setBadge('d-immo-b',pct(totalI(prev,d.cfg),iL),'vs mois préc.');
+  }
+
+  const labels=sorted.map(e=>fmtM(e.mois));
+  let ds=[];
+  if(chartMode==='all') ds.push({label:'Total',data:sorted.map(e=>totalNet(e,d.cfg)),
+    borderColor:'#fff',backgroundColor:'rgba(255,255,255,.05)',fill:true,tension:.4,pointRadius:3,borderWidth:2});
+  if(chartMode!=='etfs'&&chartMode!=='immo') d.cfg.comptes.forEach(c=>ds.push({
+    label:c.nom,data:sorted.map(e=>parseFloat(e[c.id]||0)),
+    borderColor:c.couleur,backgroundColor:c.couleur+'18',fill:false,tension:.4,pointRadius:3}));
+  if(chartMode!=='comptes'&&chartMode!=='immo') d.cfg.etfs.forEach(et=>ds.push({
+    label:et.nom,data:sorted.map(e=>{const dd=e[et.id]||{};return parseFloat(dd.parts||0)*parseFloat(dd.prix||0);}),
+    borderColor:et.couleur,backgroundColor:et.couleur+'18',fill:false,tension:.4,pointRadius:3}));
+  if(chartMode==='all'||chartMode==='immo') (d.cfg.biens||[]).forEach(b=>ds.push({
+    label:b.nom,data:sorted.map(e=>{const dd=e[b.id]||{};return Math.max(0,parseFloat(dd.valeur||0)-parseFloat(dd.credit||0));}),
+    borderColor:b.couleur,backgroundColor:b.couleur+'18',fill:false,tension:.4,pointRadius:3}));
+  mkLine('ch-evo',labels,ds);
+
+  const dL2=[...d.cfg.comptes.map(c=>c.nom),...d.cfg.etfs.map(e=>e.nom),...(d.cfg.biens||[]).map(b=>b.nom)];
+  const dC=[...d.cfg.comptes.map(c=>c.couleur),...d.cfg.etfs.map(e=>e.couleur),...(d.cfg.biens||[]).map(b=>b.couleur)];
+  const dV=[
+    ...d.cfg.comptes.map(c=>parseFloat(last[c.id]||0)),
+    ...d.cfg.etfs.map(e=>{const dd=last[e.id]||{};return parseFloat(dd.parts||0)*parseFloat(dd.prix||0);}),
+    ...(d.cfg.biens||[]).map(b=>{const dd=last[b.id]||{};return Math.max(0,parseFloat(dd.valeur||0)-parseFloat(dd.credit||0));})
+  ];
+
+  kill('ch-donut');
+  const ctx2=document.getElementById('ch-donut');
+  if(ctx2) charts['ch-donut']=new Chart(ctx2.getContext('2d'),{
+    type:'doughnut',
+    data:{labels:dL2,datasets:[{data:dV,backgroundColor:dC.map(c=>c+'bb'),borderColor:dC,borderWidth:2,hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'72%',
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e1e30',borderColor:'rgba(255,255,255,.1)',borderWidth:1,
+        callbacks:{label:c=>` ${c.label}: ${EUR(c.raw)}`}}}}
+  });
+
+  document.getElementById('donut-legend').innerHTML=dL2.map((l,i)=>{
+    const p=tN>0?(dV[i]/tN*100).toFixed(1):0;
+    return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+      <span class="dot" style="background:${dC[i]}"></span>
+      <span style="font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l}</span>
+      <span style="font-size:10px;font-weight:600;color:var(--muted)">${p}%</span>
+    </div>`;
+  }).join('');
+
+  // Graphique YTD ETFs
+  const curYearStr=new Date().getFullYear().toString();
+  const yearEntries=sorted.filter(e=>e.mois.startsWith(curYearStr));
+  const ytdCard=document.getElementById('d-ytd-card');
+  if(d.cfg.etfs.length&&yearEntries.length){
+    ytdCard.style.display='block';
+    const janEntry=sorted.find(e=>e.mois===`${curYearStr}-01`);
+    const ytdDs=d.cfg.etfs.map(et=>{
+      const vals=yearEntries.map(e=>{
+        const dd=e[et.id]||{};
+        if(dd.ytd!=null) return dd.ytd;
+        if(janEntry){const jp=parseFloat((janEntry[et.id]||{}).prix||0),cp=parseFloat(dd.prix||0);if(jp>0&&cp>0)return pct(jp,cp);}
+        return null;
+      });
+      return {label:et.nom,data:vals,borderColor:et.couleur,backgroundColor:et.couleur+'18',
+        fill:false,tension:.4,pointRadius:4,borderWidth:2,spanGaps:true};
+    });
+    mkLinePct('ch-ytd',yearEntries.map(e=>fmtM(e.mois)),ytdDs);
+  } else {
+    ytdCard.style.display='none'; kill('ch-ytd');
+  }
+
+  document.getElementById('d-alloc').innerHTML=dL2.map((l,i)=>{
+    const p=tN>0?(dV[i]/tN*100):0;
+    return `<div class="arow">
+      <div class="aname">${l}</div>
+      <div class="abar-w"><div class="abar" style="width:${p}%;background:${dC[i]}"></div></div>
+      <div class="apct">${p.toFixed(1)}%</div>
+      <div class="aval">${EUR(dV[i])}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Comptes ───────────────────────────────────────────────────────────────────
+function renderComptes(d) {
+  const sorted=[...d.entrees].sort((a,b)=>a.mois.localeCompare(b.mois));
+  const cfg=d.cfg.comptes;
+
+  // Config rows
+  document.getElementById('comp-cfg').innerHTML = cfg.length
+    ? cfg.map(c=>`<div class="cfg-row">
+        <input type="color" value="${c.couleur}" onchange="updCouleur('c','${c.id}',this.value)">
+        <input type="text" value="${c.nom}" placeholder="Nom du compte" onchange="updNom('c','${c.id}',this.value)">
+        <button class="btn btn-d" onclick="removeAsset('c','${c.id}')">Supprimer</button>
+      </div>`).join('')+
+      `<button class="btn-add" onclick="addAsset('c')">+ Ajouter un compte</button>`
+    : `<button class="btn-add" onclick="addAsset('c')">+ Ajouter un compte</button>`;
+
+  // Cards
+  const cards=document.getElementById('comp-cards');
+  if(!cfg.length||!sorted.length){
+    cards.innerHTML='';
+  } else {
+    cards.innerHTML=cfg.map(c=>{
+      const vals=sorted.map(e=>parseFloat(e[c.id]||0));
+      const last=vals[vals.length-1], prev=vals.length>1?vals[vals.length-2]:null;
+      const ch=prev!=null?pct(prev,last):null;
+      const chHtml=ch!=null?`<span class="badge ${ch>=0?'up':'dn'}">${fmtP(ch)} vs mois préc.</span>`:`<span class="badge nt">—</span>`;
+      return `<div class="card">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
+          <span class="dot" style="background:${c.couleur}"></span>
+          <span style="font-size:14px;font-weight:700">${c.nom}</span>
+        </div>
+        <div style="font-size:28px;font-weight:800;letter-spacing:-.02em;margin:5px 0">${EUR(last)}</div>
+        ${chHtml}
+        <div style="height:130px;margin:14px 0"><canvas id="ch-c-${c.id}"></canvas></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">
+          <div class="ms"><div class="ms-l">Min</div><div class="ms-v">${EUR(Math.min(...vals))}</div></div>
+          <div class="ms"><div class="ms-l">Max</div><div class="ms-v">${EUR(Math.max(...vals))}</div></div>
+          <div class="ms"><div class="ms-l">Moy.</div><div class="ms-v">${EUR(vals.reduce((a,b)=>a+b,0)/vals.length)}</div></div>
+        </div>
+      </div>`;
+    }).join('');
+    setTimeout(()=>cfg.forEach(c=>{
+      mkMini('ch-c-'+c.id,sorted.map(e=>fmtM(e.mois)),sorted.map(e=>parseFloat(e[c.id]||0)),c.couleur,true);
+    }),30);
+  }
+
+  // Entry form
+  const ef=document.getElementById('comp-entry');
+  if(!cfg.length){ ef.innerHTML=''; return; }
+  const curMois=nowM();
+  const existing=d.entrees.find(e=>e.mois===curMois)||{};
+  ef.innerHTML=`<div class="entry-card">
+    <div class="stitle">Saisir les données du mois</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <div class="fg"><label>Mois</label><input type="month" id="mois-c" value="${curMois}" onchange="prefillComptes()"></div>
+    </div>
+    <div class="entry-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">
+      ${cfg.map(c=>`<div class="fg">
+        <label style="display:flex;align-items:center;gap:5px"><span class="dot" style="background:${c.couleur}"></span>${c.nom}</label>
+        <input type="number" id="inp-${c.id}" value="${existing[c.id]||''}" placeholder="0.00" step="0.01" min="0">
+      </div>`).join('')}
+    </div>
+    <button class="btn btn-p" onclick="savePage('c')">Enregistrer</button>
+  </div>`;
+}
+
+function prefillComptes(){
+  const mois=document.getElementById('mois-c').value;
+  const d=load(), entry=d.entrees.find(e=>e.mois===mois)||{};
+  d.cfg.comptes.forEach(c=>{const el=document.getElementById('inp-'+c.id);if(el)el.value=entry[c.id]||'';});
+}
+
+// ── ETFs ──────────────────────────────────────────────────────────────────────
+function renderEtfs(d) {
+  const sorted=[...d.entrees].sort((a,b)=>a.mois.localeCompare(b.mois));
+  const cfg=d.cfg.etfs;
+
+  document.getElementById('etf-cfg').innerHTML = cfg.length
+    ? cfg.map(e=>`<div class="cfg-row">
+        <input type="color" value="${e.couleur}" onchange="updCouleur('e','${e.id}',this.value)">
+        <input type="text" value="${e.nom}" placeholder="Nom" onchange="updNom('e','${e.id}',this.value)" style="flex:2">
+        <input type="text" value="${e.ticker}" placeholder="Ticker" onchange="updTicker('${e.id}',this.value)" class="tick" style="text-transform:uppercase">
+        <button class="btn btn-d" onclick="removeAsset('e','${e.id}')">Supprimer</button>
+      </div>`).join('')+
+      `<button class="btn-add" onclick="addAsset('e')">+ Ajouter un ETF / action</button>`
+    : `<button class="btn-add" onclick="addAsset('e')">+ Ajouter un ETF / action</button>`;
+
+  const cards=document.getElementById('etf-cards');
+  if(!cfg.length||!sorted.length){ cards.innerHTML=''; }
+  else {
+    const last=sorted[sorted.length-1], prev=sorted.length>1?sorted[sorted.length-2]:null;
+    cards.innerHTML=cfg.map(e=>{
+      const dd=last[e.id]||{}, parts=parseFloat(dd.parts||0), prix=parseFloat(dd.prix||0), val=parts*prix;
+      let chMois=null;
+      if(prev){const pd=prev[e.id]||{};chMois=pct(parseFloat(pd.parts||0)*parseFloat(pd.prix||0),val);}
+      const histPrix=sorted.map(en=>parseFloat((en[e.id]||{}).prix||0));
+      const firstP=histPrix.find(p=>p>0);
+      const perfTotal=firstP?pct(firstP,prix):null;
+      const firstVal=sorted.map(en=>{const d2=en[e.id]||{};return parseFloat(d2.parts||0)*parseFloat(d2.prix||0);}).find(v=>v>0)||0;
+      const plusVal=val-firstVal;
+      const chColor=chMois==null?'var(--muted)':chMois>=0?'var(--green)':'var(--red)';
+      // YTD : valeur manuelle en priorité, sinon calcul auto depuis janvier
+      const curYear=last.mois.substring(0,4);
+      let ytd=dd.ytd!=null?dd.ytd:null;
+      if(ytd==null){
+        const janEntry=sorted.find(en=>en.mois===`${curYear}-01`);
+        if(janEntry){const jd=janEntry[e.id]||{};const jp=parseFloat(jd.prix||0);if(jp>0)ytd=pct(jp,prix);}
+      }
+      const ytdColor=ytd==null?'var(--muted)':ytd>=0?'var(--green)':'var(--red)';
+      return `<div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span class="dot" style="background:${e.couleur}"></span>
+              <span style="font-size:13px;font-weight:700">${e.nom}</span>
+            </div>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-top:2px">${e.ticker}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:20px;font-weight:800;color:${chColor}">${chMois!=null?fmtP(chMois):'—'}</div>
+            <div style="font-size:9px;color:var(--muted)">ce mois</div>
+            <div style="font-size:14px;font-weight:700;color:${ytdColor};margin-top:4px">${ytd!=null?fmtP(ytd):'—'}</div>
+            <div style="font-size:9px;color:var(--muted)">depuis 01/01</div>
+          </div>
+        </div>
+        <div style="font-size:24px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px">${EUR(val)}</div>
+        <div style="height:90px;margin-bottom:10px"><canvas id="ch-e-${e.id}"></canvas></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+          <div class="ms"><div class="ms-l">Parts</div><div class="ms-v">${parts%1===0?parts.toFixed(0):parts.toFixed(3)}</div></div>
+          <div class="ms"><div class="ms-l">Prix/part</div><div class="ms-v">${EUR(prix)}</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <div class="ms"><div class="ms-l">Perf. totale</div><div class="ms-v" style="color:${perfTotal==null?'inherit':perfTotal>=0?'var(--green)':'var(--red)'}">${perfTotal!=null?fmtP(perfTotal):'—'}</div></div>
+          <div class="ms"><div class="ms-l">+/- value</div><div class="ms-v" style="color:${plusVal>=0?'var(--green)':'var(--red)'}">${firstVal>0?EUR(plusVal):'—'}</div></div>
+        </div>
+      </div>`;
+    }).join('');
+    setTimeout(()=>cfg.forEach(e=>{
+      const vals=sorted.map(en=>{const d2=en[e.id]||{};return parseFloat(d2.parts||0)*parseFloat(d2.prix||0);});
+      mkMini('ch-e-'+e.id,sorted.map(en=>fmtM(en.mois)),vals,e.couleur,false);
+    }),30);
+  }
+
+  const ef=document.getElementById('etf-entry');
+  if(!cfg.length){ef.innerHTML='';return;}
+  const curMois=nowM(), existing=d.entrees.find(e=>e.mois===curMois)||{};
+  ef.innerHTML=`<div class="entry-card">
+    <div class="stitle">Saisir les données du mois</div>
+    <div style="margin-bottom:12px"><div class="fg"><label>Mois</label><input type="month" id="mois-e" value="${curMois}" onchange="prefillEtfs()"></div></div>
+    ${cfg.map(e=>{const dd=(existing[e.id]||{});return `<div style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:5px">
+        <span class="dot" style="background:${e.couleur}"></span>${e.nom} <span style="opacity:.5">${e.ticker}</span>
+      </div>
+      <div class="entry-row">
+        <div class="fg"><label>Nombre de parts</label><input type="number" id="inp-${e.id}-p" value="${dd.parts||''}" placeholder="0" step="0.001" min="0"></div>
+        <div class="fg"><label>Prix par part (€)</label><input type="number" id="inp-${e.id}-x" value="${dd.prix||''}" placeholder="0.00" step="0.01" min="0"></div>
+        <div class="fg"><label>Variation depuis 01/01 (%)</label><input type="number" id="inp-${e.id}-ytd" value="${dd.ytd!=null?dd.ytd:''}" placeholder="ex: -10 ou 21.69" step="0.01"></div>
+      </div>
+    </div>`;}).join('')}
+    <div style="border-top:1px solid rgba(255,255,255,.07);margin:12px 0 12px"></div>
+    <div class="fg" style="max-width:280px">
+      <label>+/- Value totale portefeuille (€)</label>
+      <input type="number" id="inp-etf-gain" value="${existing._etf_gain!=null?existing._etf_gain:''}" placeholder="ex: 1769 ou -500" step="0.01">
+      <div style="font-size:10px;color:var(--muted);margin-top:4px">Valeur issue de ton relevé courtier (gain/perte latent global)</div>
+    </div>
+    <button class="btn btn-p" onclick="savePage('e')">Enregistrer</button>
+  </div>`;
+}
+
+function prefillEtfs(){
+  const mois=document.getElementById('mois-e').value;
+  const d=load(), entry=d.entrees.find(e=>e.mois===mois)||{};
+  d.cfg.etfs.forEach(e=>{
+    const dd=entry[e.id]||{};
+    const p=document.getElementById('inp-'+e.id+'-p'); if(p)p.value=dd.parts||'';
+    const x=document.getElementById('inp-'+e.id+'-x'); if(x)x.value=dd.prix||'';
+    const y=document.getElementById('inp-'+e.id+'-ytd'); if(y)y.value=dd.ytd!=null?dd.ytd:'';
+  });
+  const g=document.getElementById('inp-etf-gain'); if(g)g.value=entry._etf_gain!=null?entry._etf_gain:'';
+}
+
+// ── Immobilier ────────────────────────────────────────────────────────────────
+function renderImmo(d) {
+  const sorted=[...d.entrees].sort((a,b)=>a.mois.localeCompare(b.mois));
+  const biens=d.cfg.biens||[];
+
+  document.getElementById('immo-cfg').innerHTML = biens.length
+    ? biens.map(b=>`<div class="cfg-row">
+        <input type="color" value="${b.couleur}" onchange="updCouleur('b','${b.id}',this.value)">
+        <input type="text" value="${b.nom}" placeholder="Nom du bien" onchange="updNom('b','${b.id}',this.value)">
+        <button class="btn btn-d" onclick="removeAsset('b','${b.id}')">Supprimer</button>
+      </div>`).join('')+
+      `<button class="btn-add" onclick="addAsset('b')">+ Ajouter un bien</button>`
+    : `<button class="btn-add" onclick="addAsset('b')">+ Ajouter un bien</button>`;
+
+  const cards=document.getElementById('immo-cards');
+  const actifs=biens.filter(b=>sorted.some(e=>e[b.id]&&parseFloat((e[b.id]||{}).valeur||0)>0));
+  if(!actifs.length){ cards.innerHTML=''; }
+  else {
+    const last=sorted[sorted.length-1], prev=sorted.length>1?sorted[sorted.length-2]:null;
+    cards.innerHTML=actifs.map(b=>{
+      const dd=last[b.id]||{}, val=parseFloat(dd.valeur||0), cred=parseFloat(dd.credit||0), eq=Math.max(0,val-cred);
+      let ch=null;
+      if(prev){const pd=prev[b.id]||{};ch=pct(Math.max(0,parseFloat(pd.valeur||0)-parseFloat(pd.credit||0)),eq);}
+      const ltv=val>0?((cred/val)*100):0;
+      const histVal=sorted.map(e=>parseFloat((e[b.id]||{}).valeur||0));
+      const firstVal=histVal.find(v=>v>0)||0;
+      const pv=firstVal?pct(firstVal,val):null;
+      return `<div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="dot" style="background:${b.couleur}"></span>
+            <span style="font-size:14px;font-weight:700">${b.nom}</span>
+          </div>
+          ${ch!=null?`<span class="badge ${ch>=0?'up':'dn'}">${fmtP(ch)}</span>`:''}
+        </div>
+        <div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.07em">Équité nette</div>
+        <div style="font-size:24px;font-weight:800;color:${eq>=0?'var(--green)':'var(--red)'};margin:4px 0 10px">${EUR(eq)}</div>
+        <div style="height:80px;margin-bottom:10px"><canvas id="ch-b-${b.id}"></canvas></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+          <div class="ms"><div class="ms-l">Valeur estimée</div><div class="ms-v">${EUR(val)}</div></div>
+          <div class="ms"><div class="ms-l">Capital restant</div><div class="ms-v" style="color:var(--red)">${EUR(cred)}</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <div class="ms"><div class="ms-l">Plus-value</div><div class="ms-v" style="color:${pv==null?'inherit':pv>=0?'var(--green)':'var(--red)'}">${pv!=null?fmtP(pv):'—'}</div></div>
+          <div class="ms"><div class="ms-l">LTV</div><div class="ms-v">${ltv.toFixed(1)}%
+            <div style="height:3px;background:rgba(255,255,255,.08);border-radius:100px;margin-top:5px;overflow:hidden">
+              <div style="height:100%;width:${Math.min(ltv,100)}%;background:${ltv>80?'var(--red)':ltv>50?'var(--amber)':'var(--green)'};border-radius:100px"></div>
+            </div>
+          </div></div>
+        </div>
+      </div>`;
+    }).join('');
+    setTimeout(()=>actifs.forEach(b=>{
+      const vals=sorted.map(e=>{const d2=e[b.id]||{};return Math.max(0,parseFloat(d2.valeur||0)-parseFloat(d2.credit||0));});
+      mkMini('ch-b-'+b.id,sorted.map(e=>fmtM(e.mois)),vals,b.couleur,false);
+    }),30);
+  }
+
+  const ef=document.getElementById('immo-entry');
+  if(!biens.length){ef.innerHTML='';return;}
+  const curMois=nowM(), existing=d.entrees.find(e=>e.mois===curMois)||{};
+  ef.innerHTML=`<div class="entry-card">
+    <div class="stitle">Saisir les données du mois</div>
+    <div style="margin-bottom:12px"><div class="fg"><label>Mois</label><input type="month" id="mois-b" value="${curMois}" onchange="prefillImmo()"></div></div>
+    ${biens.map(b=>{const dd=(existing[b.id]||{});return `<div style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:5px">
+        <span class="dot" style="background:${b.couleur}"></span>${b.nom}
+      </div>
+      <div class="entry-row">
+        <div class="fg"><label>Valeur estimée (€)</label><input type="number" id="inp-${b.id}-v" value="${dd.valeur||''}" placeholder="0" step="1" min="0"></div>
+        <div class="fg"><label>Capital restant dû (€)</label><input type="number" id="inp-${b.id}-k" value="${dd.credit||''}" placeholder="0" step="1" min="0"></div>
+      </div>
+    </div>`;}).join('')}
+    <button class="btn btn-p" onclick="savePage('b')">Enregistrer</button>
+  </div>`;
+}
+
+function prefillImmo(){
+  const mois=document.getElementById('mois-b').value;
+  const d=load(), entry=d.entrees.find(e=>e.mois===mois)||{};
+  (d.cfg.biens||[]).forEach(b=>{
+    const dd=entry[b.id]||{};
+    const v=document.getElementById('inp-'+b.id+'-v'); if(v)v.value=dd.valeur||'';
+    const k=document.getElementById('inp-'+b.id+'-k'); if(k)k.value=dd.credit||'';
+  });
+}
+
+// ── Historique ────────────────────────────────────────────────────────────────
+function renderHist(d) {
+  const sorted=[...d.entrees].sort((a,b)=>b.mois.localeCompare(a.mois));
+  const has=sorted.length>0;
+  document.getElementById('hist-empty').style.display=has?'none':'block';
+  if(!has){document.getElementById('hist-head').innerHTML='';document.getElementById('hist-body').innerHTML='';return;}
+
+  document.getElementById('hist-head').innerHTML=`<tr>
+    <th>Mois</th>
+    ${d.cfg.comptes.map(c=>`<th>${c.nom}</th>`).join('')}
+    ${d.cfg.etfs.map(e=>`<th>${e.nom}</th>`).join('')}
+    ${(d.cfg.biens||[]).map(b=>`<th>${b.nom}</th>`).join('')}
+    <th>Total Net</th><th></th>
+  </tr>`;
+
+  document.getElementById('hist-body').innerHTML=sorted.map((entry,i)=>{
+    const t=totalNet(entry,d.cfg), prevE=sorted[i+1];
+    const ch=prevE?pct(totalNet(prevE,d.cfg),t):null;
+    const chSpan=ch!=null?`<span style="font-size:10px;font-weight:600;color:${ch>=0?'var(--green)':'var(--red)'}"> ${fmtP(ch)}</span>`:'';
+    return `<tr>
+      <td><strong>${fmtM(entry.mois)}</strong></td>
+      ${d.cfg.comptes.map(c=>`<td>${EUR(parseFloat(entry[c.id]||0))}</td>`).join('')}
+      ${d.cfg.etfs.map(e=>{const dd=entry[e.id]||{};return `<td>${EUR(parseFloat(dd.parts||0)*parseFloat(dd.prix||0))}</td>`}).join('')}
+      ${(d.cfg.biens||[]).map(b=>{const dd=entry[b.id]||{};return `<td>${EUR(Math.max(0,parseFloat(dd.valeur||0)-parseFloat(dd.credit||0)))}</td>`}).join('')}
+      <td><strong>${EUR(t)}</strong>${chSpan}</td>
+      <td><button style="background:none;border:none;color:var(--muted);cursor:pointer;padding:3px;border-radius:5px" onclick="delEntry('${entry.mois}')" title="Supprimer">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      </button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Save page data ────────────────────────────────────────────────────────────
+function savePage(type) {
+  const moisEl=document.getElementById('mois-'+type);
+  const mois=moisEl?moisEl.value:'';
+  if(!mois){toast('Sélectionnez un mois','err');return;}
+  const d=load();
+  let entry=d.entrees.find(e=>e.mois===mois);
+  if(!entry){entry={mois};d.entrees.push(entry);}
+
+  if(type==='c'){
+    d.cfg.comptes.forEach(c=>{const el=document.getElementById('inp-'+c.id);entry[c.id]=parseFloat(el?.value||0);});
+  } else if(type==='e'){
+    d.cfg.etfs.forEach(e=>{
+      const ytdRaw=document.getElementById('inp-'+e.id+'-ytd')?.value;
+      entry[e.id]={
+        parts:parseFloat(document.getElementById('inp-'+e.id+'-p')?.value||0),
+        prix:parseFloat(document.getElementById('inp-'+e.id+'-x')?.value||0),
+        ytd:ytdRaw!==''&&ytdRaw!=null?parseFloat(ytdRaw):null
+      };
+    });
+    const gainRaw=document.getElementById('inp-etf-gain')?.value;
+    entry._etf_gain=gainRaw!==''&&gainRaw!=null?parseFloat(gainRaw):null;
+  } else {
+    (d.cfg.biens||[]).forEach(b=>{
+      entry[b.id]={
+        valeur:parseFloat(document.getElementById('inp-'+b.id+'-v')?.value||0),
+        credit:parseFloat(document.getElementById('inp-'+b.id+'-k')?.value||0)
+      };
+    });
+  }
+  save(d); render(curPage); toast('Données enregistrées','ok');
+}
+
+// ── Config CRUD ───────────────────────────────────────────────────────────────
+function addAsset(type) {
+  const d=load();
+  const id=type+'_'+Date.now();
+  const n=(type==='c'?d.cfg.comptes:type==='e'?d.cfg.etfs:(d.cfg.biens||[])).length;
+  const couleur=COLORS[n%COLORS.length];
+  if(type==='c') d.cfg.comptes.push({id,nom:'Nouveau compte',couleur});
+  else if(type==='e') d.cfg.etfs.push({id,nom:'Nouvel ETF',ticker:'ETF',couleur});
+  else{if(!d.cfg.biens)d.cfg.biens=[];d.cfg.biens.push({id,nom:'Nouveau bien',couleur});}
+  save(d); render(curPage);
+}
+
+function removeAsset(type,id){
+  if(!confirm('Supprimer cet actif ?'))return;
+  const d=load();
+  if(type==='c') d.cfg.comptes=d.cfg.comptes.filter(x=>x.id!==id);
+  else if(type==='e') d.cfg.etfs=d.cfg.etfs.filter(x=>x.id!==id);
+  else d.cfg.biens=(d.cfg.biens||[]).filter(x=>x.id!==id);
+  save(d); render(curPage); toast('Supprimé','ok');
+}
+
+function updNom(type,id,val){
+  const d=load();
+  const arr=type==='c'?d.cfg.comptes:type==='e'?d.cfg.etfs:(d.cfg.biens||[]);
+  const item=arr.find(x=>x.id===id); if(item)item.nom=val;
+  save(d);
+}
+
+function updCouleur(type,id,val){
+  const d=load();
+  const arr=type==='c'?d.cfg.comptes:type==='e'?d.cfg.etfs:(d.cfg.biens||[]);
+  const item=arr.find(x=>x.id===id); if(item)item.couleur=val;
+  save(d); render(curPage);
+}
+
+function updTicker(id,val){
+  const d=load();
+  const e=d.cfg.etfs.find(x=>x.id===id); if(e)e.ticker=val.toUpperCase();
+  save(d);
+}
+
+// ── Entrée / Historique ───────────────────────────────────────────────────────
+function delEntry(mois){
+  if(!confirm(`Supprimer l'entrée de ${fmtM(mois)} ?`))return;
+  const d=load(); d.entrees=d.entrees.filter(e=>e.mois!==mois);
+  save(d); renderHist(d); toast('Entrée supprimée','ok');
+}
+
+function resetAll(){
+  if(!confirm('Réinitialiser TOUTES les données ? Action irréversible.'))return;
+  save(def()); render(curPage); toast('Données réinitialisées','ok');
+}
+
+// ── Export / Import ───────────────────────────────────────────────────────────
+function exportData(){
+  const d=load();
+  const now=new Date();
+  const stamp=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=`wealthflow-backup-${stamp}.json`; a.click();
+  URL.revokeObjectURL(a.href); toast('Sauvegarde téléchargée','ok');
+}
+
+function importData(event){
+  const file=event.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      if(!d.cfg||!d.entrees)throw new Error();
+      // migrate old keys
+      if(!d.cfg.biens)d.cfg.biens=[];
+      save(d); render(curPage); toast('Données importées','ok');
+    }catch{ toast('Fichier invalide','err'); }
+    event.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+let _tt;
+function toast(msg,type='ok'){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast '+type+' show';
+  clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  render('dashboard');
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape') {};
+  });
+});
+</script>
+</body>
+</html>
