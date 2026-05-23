@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WealthFlow</title>
+<title>Fortuna</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -179,7 +179,7 @@ input[type=month]::-webkit-calendar-picker-indicator{filter:invert(1) opacity(.4
         <stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#06b6d4"/>
       </linearGradient></defs>
     </svg>
-    <span>WealthFlow</span>
+    <span>Fortuna</span>
   </div>
   <div class="nav-item active" onclick="nav('dashboard')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -193,6 +193,10 @@ input[type=month]::-webkit-calendar-picker-indicator{filter:invert(1) opacity(.4
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
     <span>ETFs</span>
   </div>
+  <div class="nav-item" onclick="nav('pee')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+    <span>PEE</span>
+  </div>
   <div class="nav-item" onclick="nav('immo')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     <span>Immobilier</span>
@@ -205,6 +209,9 @@ input[type=month]::-webkit-calendar-picker-indicator{filter:invert(1) opacity(.4
   <div class="nav-item" onclick="nav('parametres')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     <span>Paramètres</span>
+  </div>
+  <div style="padding:12px;font-size:9px;color:rgba(100,116,139,.5);line-height:1.5;border-top:1px solid rgba(255,255,255,.05);margin-top:4px">
+    Vibe coded by<br><span style="color:rgba(148,163,184,.6);font-weight:600">Jérôme Aguas</span>
   </div>
 </nav>
 
@@ -229,9 +236,10 @@ input[type=month]::-webkit-calendar-picker-indicator{filter:invert(1) opacity(.4
         </div>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px">
       <div class="card"><div class="slbl">Comptes</div><div class="sval" id="d-comp">—</div><div class="badge nt" id="d-comp-b">—</div></div>
       <div class="card"><div class="slbl">ETFs</div><div class="sval" id="d-etf">—</div><div class="badge nt" id="d-etf-b">—</div></div>
+      <div class="card"><div class="slbl">PEE</div><div class="sval" id="d-pee">—</div><div class="badge nt" id="d-pee-b">—</div></div>
       <div class="card"><div class="slbl">Équité Immo</div><div class="sval" id="d-immo">—</div><div class="badge nt" id="d-immo-b">—</div></div>
       <div class="card"><div class="slbl">+/- Value ETFs</div><div class="sval" id="d-etf-gain">—</div><div style="font-size:11px;color:var(--muted);margin-top:2px" id="d-etf-gain-pct">—</div></div>
     </div>
@@ -245,6 +253,7 @@ input[type=month]::-webkit-calendar-picker-indicator{filter:invert(1) opacity(.4
           <button class="tgl active" onclick="setMode('all')">Tout</button>
           <button class="tgl" onclick="setMode('comptes')">Comptes</button>
           <button class="tgl" onclick="setMode('etfs')">ETFs</button>
+          <button class="tgl" onclick="setMode('pee')">PEE</button>
           <button class="tgl" onclick="setMode('immo')">Immo</button>
         </div>
       </div>
@@ -302,6 +311,20 @@ input[type=month]::-webkit-calendar-picker-indicator{filter:invert(1) opacity(.4
   <div id="etf-cfg"></div>
   <div class="g3" id="etf-cards" style="margin-top:16px"></div>
   <div id="etf-entry"></div>
+</div>
+
+<!-- PEE -->
+<div class="page" id="page-pee">
+  <div class="ph">
+    <div><h1>PEE</h1><p>Plan Épargne Entreprise — fonds et actions</p></div>
+    <button class="btn btn-s" onclick="addAsset('p')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Ajouter un fonds
+    </button>
+  </div>
+  <div id="pee-cfg"></div>
+  <div class="g3" id="pee-cards" style="margin-top:16px"></div>
+  <div id="pee-entry"></div>
 </div>
 
 <!-- IMMOBILIER -->
@@ -387,11 +410,11 @@ input[type=month]::-webkit-calendar-picker-indicator{filter:invert(1) opacity(.4
 
 <script>
 // ── Data ─────────────────────────────────────────────────────────────────────
-const KEY = 'wealthflow_v3';
+const KEY = 'fortuna_v1';
 const COLORS = ['#7c3aed','#06b6d4','#10b981','#f59e0b','#a78bfa','#f43f5e','#fb923c','#facc15','#34d399','#60a5fa'];
 
 function def() {
-  return { cfg:{ comptes:[], etfs:[], biens:[] }, entrees:[] };
+  return { cfg:{ comptes:[], etfs:[], biens:[], pee:[] }, entrees:[] };
 }
 
 const load = () => {
@@ -399,12 +422,13 @@ const load = () => {
     const cur = localStorage.getItem(KEY);
     if (cur) return JSON.parse(cur);
     // migrate from older keys
-    for (const old of ['wealthflow_v2','wealthflow_v1','wealthflow']) {
+    for (const old of ['wealthflow_v3','wealthflow_v2','wealthflow_v1','wealthflow']) {
       const raw = localStorage.getItem(old);
       if (!raw) continue;
       const d = JSON.parse(raw);
       if (!d.cfg) continue;
       if (!d.cfg.biens) d.cfg.biens = [];
+      if (!d.cfg.pee) d.cfg.pee = [];
       localStorage.setItem(KEY, JSON.stringify(d));
       localStorage.removeItem(old);
       return d;
@@ -424,14 +448,15 @@ const nowM = () => { const n=new Date(); return `${n.getFullYear()}-${String(n.g
 // ── Totaux ────────────────────────────────────────────────────────────────────
 function totalC(e,cfg){ return cfg.comptes.reduce((s,c)=>s+parseFloat(e[c.id]||0),0); }
 function totalE(e,cfg){ return cfg.etfs.reduce((s,et)=>{ const d=e[et.id]||{}; return s+parseFloat(d.parts||0)*parseFloat(d.prix||0); },0); }
+function totalP(e,cfg){ return (cfg.pee||[]).reduce((s,p)=>{ const d=e[p.id]||{}; return s+parseFloat(d.valeur||0); },0); }
 function totalI(e,cfg){ return (cfg.biens||[]).reduce((s,b)=>{ const d=e[b.id]||{}; return s+Math.max(0,parseFloat(d.valeur||0)-parseFloat(d.credit||0)); },0); }
-function totalNet(e,cfg){ return totalC(e,cfg)+totalE(e,cfg)+totalI(e,cfg)+(e._etf_gain||0); }
-function totalBrut(e,cfg){ return totalC(e,cfg)+totalE(e,cfg)+(cfg.biens||[]).reduce((s,b)=>s+parseFloat((e[b.id]||{}).valeur||0),0)+(e._etf_gain||0); }
+function totalNet(e,cfg){ return totalC(e,cfg)+totalE(e,cfg)+totalP(e,cfg)+totalI(e,cfg)+(e._etf_gain||0); }
+function totalBrut(e,cfg){ return totalC(e,cfg)+totalE(e,cfg)+totalP(e,cfg)+(cfg.biens||[]).reduce((s,b)=>s+parseFloat((e[b.id]||{}).valeur||0),0)+(e._etf_gain||0); }
 function totalDettes(e,cfg){ return (cfg.biens||[]).reduce((s,b)=>s+parseFloat((e[b.id]||{}).credit||0),0); }
 
 // ── Navigation ────────────────────────────────────────────────────────────────
 let curPage = 'dashboard';
-const pages = ['dashboard','comptes','etfs','immo','historique','parametres'];
+const pages = ['dashboard','comptes','etfs','pee','immo','historique','parametres'];
 
 function nav(p) {
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
@@ -446,6 +471,7 @@ function render(p) {
   if (p==='dashboard') renderDash(d);
   else if (p==='comptes') renderComptes(d);
   else if (p==='etfs') renderEtfs(d);
+  else if (p==='pee') renderPee(d);
   else if (p==='immo') renderImmo(d);
   else if (p==='historique') renderHist(d);
 }
@@ -507,7 +533,7 @@ function mkMini(id, labels, vals, color, showX) {
 let chartMode = 'all';
 function setMode(m){
   chartMode=m;
-  document.querySelectorAll('.tgl').forEach((b,i)=>b.classList.toggle('active',['all','comptes','etfs','immo'][i]===m));
+  document.querySelectorAll('.tgl').forEach((b,i)=>b.classList.toggle('active',['all','comptes','etfs','pee','immo'][i]===m));
   renderDash(load());
 }
 
@@ -538,9 +564,12 @@ function renderDash(d) {
   document.getElementById('d-total').textContent=EUR(tN);
   document.getElementById('d-brut').textContent=EUR(bL);
   document.getElementById('d-dettes').textContent=EUR(dL);
+  const pL=totalP(last,d.cfg);
   document.getElementById('d-comp').textContent=EUR(cL);
   document.getElementById('d-etf').textContent=EUR(eL);
+  document.getElementById('d-pee').textContent=EUR(pL);
   document.getElementById('d-immo').textContent=EUR(iL);
+  if(prev) setBadge('d-pee-b',pct(totalP(prev,d.cfg),pL),'vs mois préc.');
 
   // +/- Value ETFs : valeur manuelle en priorité, sinon calcul auto
   let etfGain=last._etf_gain!=null?last._etf_gain:null;
@@ -566,22 +595,26 @@ function renderDash(d) {
   let ds=[];
   if(chartMode==='all') ds.push({label:'Total',data:sorted.map(e=>totalNet(e,d.cfg)),
     borderColor:'#fff',backgroundColor:'rgba(255,255,255,.05)',fill:true,tension:.4,pointRadius:3,borderWidth:2});
-  if(chartMode!=='etfs'&&chartMode!=='immo') d.cfg.comptes.forEach(c=>ds.push({
+  if(chartMode==='all'||chartMode==='comptes') d.cfg.comptes.forEach(c=>ds.push({
     label:c.nom,data:sorted.map(e=>parseFloat(e[c.id]||0)),
     borderColor:c.couleur,backgroundColor:c.couleur+'18',fill:false,tension:.4,pointRadius:3}));
-  if(chartMode!=='comptes'&&chartMode!=='immo') d.cfg.etfs.forEach(et=>ds.push({
+  if(chartMode==='all'||chartMode==='etfs') d.cfg.etfs.forEach(et=>ds.push({
     label:et.nom,data:sorted.map(e=>{const dd=e[et.id]||{};return parseFloat(dd.parts||0)*parseFloat(dd.prix||0);}),
     borderColor:et.couleur,backgroundColor:et.couleur+'18',fill:false,tension:.4,pointRadius:3}));
+  if(chartMode==='all'||chartMode==='pee') (d.cfg.pee||[]).forEach(p=>ds.push({
+    label:p.nom,data:sorted.map(e=>parseFloat((e[p.id]||{}).valeur||0)),
+    borderColor:p.couleur,backgroundColor:p.couleur+'18',fill:false,tension:.4,pointRadius:3}));
   if(chartMode==='all'||chartMode==='immo') (d.cfg.biens||[]).forEach(b=>ds.push({
     label:b.nom,data:sorted.map(e=>{const dd=e[b.id]||{};return Math.max(0,parseFloat(dd.valeur||0)-parseFloat(dd.credit||0));}),
     borderColor:b.couleur,backgroundColor:b.couleur+'18',fill:false,tension:.4,pointRadius:3}));
   mkLine('ch-evo',labels,ds);
 
-  const dL2=[...d.cfg.comptes.map(c=>c.nom),...d.cfg.etfs.map(e=>e.nom),...(d.cfg.biens||[]).map(b=>b.nom)];
-  const dC=[...d.cfg.comptes.map(c=>c.couleur),...d.cfg.etfs.map(e=>e.couleur),...(d.cfg.biens||[]).map(b=>b.couleur)];
+  const dL2=[...d.cfg.comptes.map(c=>c.nom),...d.cfg.etfs.map(e=>e.nom),...(d.cfg.pee||[]).map(p=>p.nom),...(d.cfg.biens||[]).map(b=>b.nom)];
+  const dC=[...d.cfg.comptes.map(c=>c.couleur),...d.cfg.etfs.map(e=>e.couleur),...(d.cfg.pee||[]).map(p=>p.couleur),...(d.cfg.biens||[]).map(b=>b.couleur)];
   const dV=[
     ...d.cfg.comptes.map(c=>parseFloat(last[c.id]||0)),
     ...d.cfg.etfs.map(e=>{const dd=last[e.id]||{};return parseFloat(dd.parts||0)*parseFloat(dd.prix||0);}),
+    ...(d.cfg.pee||[]).map(p=>parseFloat((last[p.id]||{}).valeur||0)),
     ...(d.cfg.biens||[]).map(b=>{const dd=last[b.id]||{};return Math.max(0,parseFloat(dd.valeur||0)-parseFloat(dd.credit||0));})
   ];
 
@@ -817,6 +850,78 @@ function prefillEtfs(){
   const g=document.getElementById('inp-etf-gain'); if(g)g.value=entry._etf_gain!=null?entry._etf_gain:'';
 }
 
+// ── PEE ───────────────────────────────────────────────────────────────────────
+function renderPee(d) {
+  const sorted=[...d.entrees].sort((a,b)=>a.mois.localeCompare(b.mois));
+  const cfg=d.cfg.pee||[];
+
+  document.getElementById('pee-cfg').innerHTML = cfg.length
+    ? cfg.map(p=>`<div class="cfg-row">
+        <input type="color" value="${p.couleur}" onchange="updCouleur('p','${p.id}',this.value)">
+        <input type="text" value="${p.nom}" placeholder="Nom du fonds" onchange="updNom('p','${p.id}',this.value)">
+        <button class="btn btn-d" onclick="removeAsset('p','${p.id}')">Supprimer</button>
+      </div>`).join('')+
+      `<button class="btn-add" onclick="addAsset('p')">+ Ajouter un fonds</button>`
+    : `<button class="btn-add" onclick="addAsset('p')">+ Ajouter un fonds</button>`;
+
+  const cards=document.getElementById('pee-cards');
+  if(!cfg.length||!sorted.length){ cards.innerHTML=''; }
+  else {
+    const last=sorted[sorted.length-1], prev=sorted.length>1?sorted[sorted.length-2]:null;
+    cards.innerHTML=cfg.map(p=>{
+      const dd=last[p.id]||{}, val=parseFloat(dd.valeur||0);
+      let chMois=null;
+      if(prev){const pd=prev[p.id]||{};chMois=pct(parseFloat(pd.valeur||0),val);}
+      const firstVal=sorted.map(e=>parseFloat((e[p.id]||{}).valeur||0)).find(v=>v>0)||0;
+      const plusVal=val-firstVal;
+      const chColor=chMois==null?'var(--muted)':chMois>=0?'var(--green)':'var(--red)';
+      return `<div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="dot" style="background:${p.couleur}"></span>
+            <span style="font-size:13px;font-weight:700">${p.nom}</span>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:20px;font-weight:800;color:${chColor}">${chMois!=null?fmtP(chMois):'—'}</div>
+            <div style="font-size:9px;color:var(--muted)">ce mois</div>
+          </div>
+        </div>
+        <div style="font-size:24px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px">${EUR(val)}</div>
+        <div style="height:90px;margin-bottom:10px"><canvas id="ch-p-${p.id}"></canvas></div>
+        <div class="ms"><div class="ms-l">+/- value</div><div class="ms-v" style="color:${plusVal>=0?'var(--green)':'var(--red)'}">${firstVal>0?EUR(plusVal):'—'}</div></div>
+      </div>`;
+    }).join('');
+    setTimeout(()=>cfg.forEach(p=>{
+      const vals=sorted.map(e=>parseFloat((e[p.id]||{}).valeur||0));
+      mkMini('ch-p-'+p.id,sorted.map(e=>fmtM(e.mois)),vals,p.couleur,false);
+    }),30);
+  }
+
+  const ef=document.getElementById('pee-entry');
+  if(!cfg.length){ef.innerHTML='';return;}
+  const curMois=nowM(), existing=d.entrees.find(e=>e.mois===curMois)||{};
+  ef.innerHTML=`<div class="entry-card">
+    <div class="stitle">Saisir les données du mois</div>
+    <div style="margin-bottom:12px"><div class="fg"><label>Mois</label><input type="month" id="mois-p" value="${curMois}" onchange="prefillPee()"></div></div>
+    ${cfg.map(p=>{const dd=(existing[p.id]||{});return `<div style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:5px">
+        <span class="dot" style="background:${p.couleur}"></span>${p.nom}
+      </div>
+      <div class="fg"><label>Valeur totale (€)</label><input type="number" id="inp-${p.id}-v" value="${dd.valeur||''}" placeholder="0.00" step="0.01" min="0"></div>
+    </div>`;}).join('')}
+    <button class="btn btn-p" onclick="savePage('p')">Enregistrer</button>
+  </div>`;
+}
+
+function prefillPee(){
+  const mois=document.getElementById('mois-p').value;
+  const d=load(), entry=d.entrees.find(e=>e.mois===mois)||{};
+  (d.cfg.pee||[]).forEach(p=>{
+    const dd=entry[p.id]||{};
+    const v=document.getElementById('inp-'+p.id+'-v'); if(v)v.value=dd.valeur||'';
+  });
+}
+
 // ── Immobilier ────────────────────────────────────────────────────────────────
 function renderImmo(d) {
   const sorted=[...d.entrees].sort((a,b)=>a.mois.localeCompare(b.mois));
@@ -958,6 +1063,10 @@ function savePage(type) {
     });
     const gainRaw=document.getElementById('inp-etf-gain')?.value;
     entry._etf_gain=gainRaw!==''&&gainRaw!=null?parseFloat(gainRaw):null;
+  } else if(type==='p'){
+    (d.cfg.pee||[]).forEach(p=>{
+      entry[p.id]={valeur:parseFloat(document.getElementById('inp-'+p.id+'-v')?.value||0)};
+    });
   } else {
     (d.cfg.biens||[]).forEach(b=>{
       entry[b.id]={
@@ -973,10 +1082,11 @@ function savePage(type) {
 function addAsset(type) {
   const d=load();
   const id=type+'_'+Date.now();
-  const n=(type==='c'?d.cfg.comptes:type==='e'?d.cfg.etfs:(d.cfg.biens||[])).length;
+  const n=(type==='c'?d.cfg.comptes:type==='e'?d.cfg.etfs:type==='p'?(d.cfg.pee||[]):(d.cfg.biens||[])).length;
   const couleur=COLORS[n%COLORS.length];
   if(type==='c') d.cfg.comptes.push({id,nom:'Nouveau compte',couleur});
   else if(type==='e') d.cfg.etfs.push({id,nom:'Nouvel ETF',ticker:'ETF',couleur});
+  else if(type==='p'){if(!d.cfg.pee)d.cfg.pee=[];d.cfg.pee.push({id,nom:'Nouveau fonds',couleur});}
   else{if(!d.cfg.biens)d.cfg.biens=[];d.cfg.biens.push({id,nom:'Nouveau bien',couleur});}
   save(d); render(curPage);
 }
@@ -986,20 +1096,21 @@ function removeAsset(type,id){
   const d=load();
   if(type==='c') d.cfg.comptes=d.cfg.comptes.filter(x=>x.id!==id);
   else if(type==='e') d.cfg.etfs=d.cfg.etfs.filter(x=>x.id!==id);
+  else if(type==='p') d.cfg.pee=(d.cfg.pee||[]).filter(x=>x.id!==id);
   else d.cfg.biens=(d.cfg.biens||[]).filter(x=>x.id!==id);
   save(d); render(curPage); toast('Supprimé','ok');
 }
 
 function updNom(type,id,val){
   const d=load();
-  const arr=type==='c'?d.cfg.comptes:type==='e'?d.cfg.etfs:(d.cfg.biens||[]);
+  const arr=type==='c'?d.cfg.comptes:type==='e'?d.cfg.etfs:type==='p'?(d.cfg.pee||[]):(d.cfg.biens||[]);
   const item=arr.find(x=>x.id===id); if(item)item.nom=val;
   save(d);
 }
 
 function updCouleur(type,id,val){
   const d=load();
-  const arr=type==='c'?d.cfg.comptes:type==='e'?d.cfg.etfs:(d.cfg.biens||[]);
+  const arr=type==='c'?d.cfg.comptes:type==='e'?d.cfg.etfs:type==='p'?(d.cfg.pee||[]):(d.cfg.biens||[]);
   const item=arr.find(x=>x.id===id); if(item)item.couleur=val;
   save(d); render(curPage);
 }
@@ -1029,7 +1140,7 @@ function exportData(){
   const stamp=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
   const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob); a.download=`wealthflow-backup-${stamp}.json`; a.click();
+  a.href=URL.createObjectURL(blob); a.download=`fortuna-backup-${stamp}.json`; a.click();
   URL.revokeObjectURL(a.href); toast('Sauvegarde téléchargée','ok');
 }
 
