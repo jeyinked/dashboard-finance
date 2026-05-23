@@ -29,8 +29,8 @@ Track your bank accounts, ETF portfolio, PEE (Plan Épargne Entreprise), and rea
 No installation needed.
 
 ```bash
-xdg-open finance-dashboard.html   # Linux
-open finance-dashboard.html       # macOS
+xdg-open fortuna.html   # Linux
+open fortuna.html       # macOS
 ```
 
 Or just double-click the file in your file manager.
@@ -50,7 +50,7 @@ Then open [http://localhost:8080](http://localhost:8080) in your browser.
 
 ```dockerfile
 FROM nginx:alpine
-COPY finance-dashboard.html /usr/share/nginx/html/index.html
+COPY fortuna.html /usr/share/nginx/html/index.html
 EXPOSE 80
 ```
 
@@ -60,7 +60,7 @@ EXPOSE 80
 
 ```
 fortuna/
-├── finance-dashboard.html   # The entire app (HTML + CSS + JS)
+├── fortuna.html   # The entire app (HTML + CSS + JS)
 ├── Dockerfile
 └── README.md
 ```
